@@ -5,7 +5,7 @@ const morgan=require('morgan');
 const bodyParser=require('body-parser');
 const cors=require('cors');
 
-app.set('port',(process.env.PORT || 8083));
+app.set('port',(process.env.PORT));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
