@@ -10,7 +10,11 @@
     "type": "git",
     "url": "git+https://github.com/berserker5619/jobs-app-api.git"
   },
-  "keywords": ["jobs","jobs project","career project"],
+  "keywords": [
+    "jobs",
+    "jobs project",
+    "career project"
+  ],
   "author": "Nizamudeen S",
   "license": "ISC",
   "bugs": {
