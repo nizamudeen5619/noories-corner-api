@@ -1,9 +1,10 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const rootAuth = require('../middleware/root-auth');
 const Offer = require('../models/offer')
 const router = new express.Router()
 
-router.post('/offer/admin', auth, async (req, res) => {
+router.post('/offer/admin', rootAuth, auth, async (req, res) => {
     const product = new Offer(req.body)
 
     try {
@@ -14,7 +15,7 @@ router.post('/offer/admin', auth, async (req, res) => {
     }
 })
 
-router.get('/offer', async (req, res) => {
+router.get('/offer', rootAuth, async (req, res) => {
     const color = req.query.color;
     const design = parseInt(req.query.design);
 
@@ -26,7 +27,7 @@ router.get('/offer', async (req, res) => {
     }
 })
 
-router.get('/offer/:id', async (req, res) => {
+router.get('/offer/:id', rootAuth, async (req, res) => {
     const _id = req.params.id
     try {
         const product = await Offer.findOne({ _id })
@@ -39,7 +40,7 @@ router.get('/offer/:id', async (req, res) => {
     }
 })
 
-router.put('/offer/admin', auth, async (req, res) => {
+router.put('/offer/admin', rootAuth, auth, async (req, res) => {
     try {
         const product = await Offer.findOne({ _id: req.body._id })
         if (!product) {
@@ -69,7 +70,7 @@ router.put('/offer/admin', auth, async (req, res) => {
 })
 
 
-router.delete('/offer/admin/:id', auth, async (req, res) => {
+router.delete('/offer/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const product = await Offer.findOneAndDelete({ _id: req.params.id })
 

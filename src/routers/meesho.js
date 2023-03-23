@@ -1,9 +1,10 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const rootAuth = require('../middleware/root-auth');
 const Meesho = require('../models/meesho')
 const router = new express.Router()
 
-router.post('/meesho/admin', auth, async (req, res) => {
+router.post('/meesho/admin', rootAuth, auth, async (req, res) => {
     const product = new Meesho(req.body)
 
     try {
@@ -14,7 +15,7 @@ router.post('/meesho/admin', auth, async (req, res) => {
     }
 })
 
-router.get('/meesho', async (req, res) => {
+router.get('/meesho', rootAuth, async (req, res) => {
     const color = req.query.color;
     const design = parseInt(req.query.design);
 
@@ -26,7 +27,7 @@ router.get('/meesho', async (req, res) => {
     }
 })
 
-router.get('/meesho/:id', async (req, res) => {
+router.get('/meesho/:id', rootAuth, async (req, res) => {
     const _id = req.params.id
     try {
         const product = await Meesho.findOne({ _id })
@@ -39,7 +40,7 @@ router.get('/meesho/:id', async (req, res) => {
     }
 })
 
-router.put('/meesho/admin', auth, async (req, res) => {
+router.put('/meesho/admin', rootAuth, auth, async (req, res) => {
     try {
         const product = await Meesho.findOne({ _id: req.body._id })
         if (!product) {
@@ -69,7 +70,7 @@ router.put('/meesho/admin', auth, async (req, res) => {
 })
 
 
-router.delete('/meesho/admin/:id', auth, async (req, res) => {
+router.delete('/meesho/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const product = await Meesho.findOneAndDelete({ _id: req.params.id })
 

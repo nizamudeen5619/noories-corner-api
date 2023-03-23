@@ -1,9 +1,10 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const rootAuth = require('../middleware/root-auth');
 const Amazon = require('../models/amazon')
 const router = new express.Router()
 
-router.post('/amazon/admin', auth, async (req, res) => {
+router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
     const product = new Amazon(req.body)
 
     try {
@@ -14,7 +15,7 @@ router.post('/amazon/admin', auth, async (req, res) => {
     }
 })
 
-router.get('/amazon', async (req, res) => {
+router.get('/amazon', rootAuth, async (req, res) => {
     const color = req.query.color;
     const design = parseInt(req.query.design);
 
@@ -26,7 +27,7 @@ router.get('/amazon', async (req, res) => {
     }
 })
 
-router.get('/amazon/:id', async (req, res) => {
+router.get('/amazon/:id', rootAuth, async (req, res) => {
     const _id = req.params.id
     try {
         const product = await Amazon.findOne({ _id })
@@ -39,7 +40,7 @@ router.get('/amazon/:id', async (req, res) => {
     }
 })
 
-router.put('/amazon/admin', auth, async (req, res) => {
+router.put('/amazon/admin', rootAuth, auth, async (req, res) => {
     try {
         const product = await Amazon.findOne({ _id: req.body._id })
         if (!product) {
@@ -69,7 +70,7 @@ router.put('/amazon/admin', auth, async (req, res) => {
 })
 
 
-router.delete('/amazon/admin/:id', auth, async (req, res) => {
+router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const product = await Amazon.findOneAndDelete({ _id: req.params.id })
 

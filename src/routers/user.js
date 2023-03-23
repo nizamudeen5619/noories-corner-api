@@ -3,7 +3,8 @@ const multer = require('multer')
 const sharp = require('sharp')
 const nodemailer = require('nodemailer');
 const User = require('../models/user')
-const auth = require('../middleware/auth')
+const auth = require('../middleware/auth');
+const rootAuth = require('../middleware/root-auth');
 const router = new express.Router()
 
 let transporter = nodemailer.createTransport({
@@ -15,7 +16,7 @@ let transporter = nodemailer.createTransport({
 })
 
 //register
-router.post('/users', async (req, res) => {
+router.post('/users', rootAuth, async (req, res) => {
     const user = new User(req.body)
 
     try {
@@ -35,7 +36,7 @@ router.post('/users', async (req, res) => {
 })
 
 //login
-router.post('/users/login', async (req, res) => {
+router.post('/users/login', rootAuth, async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         const token = await user.generateAuthToken()
@@ -46,7 +47,7 @@ router.post('/users/login', async (req, res) => {
 })
 
 //logout
-router.post('/users/logout', auth, async (req, res) => {
+router.post('/users/logout', rootAuth, auth, async (req, res) => {
     try {
         req.user.tokens = req.user.tokens.filter((token) => {
             return token.token !== req.token
@@ -60,7 +61,7 @@ router.post('/users/logout', auth, async (req, res) => {
 })
 
 //logoutall
-router.post('/users/logoutAll', auth, async (req, res) => {
+router.post('/users/logoutAll', rootAuth, auth, async (req, res) => {
     try {
         req.user.tokens = []
         await req.user.save()
@@ -71,12 +72,12 @@ router.post('/users/logoutAll', auth, async (req, res) => {
 })
 
 //user profile
-router.get('/users/me', auth, async (req, res) => {
+router.get('/users/me', rootAuth, auth, async (req, res) => {
     res.send(req.user)
 })
 
 //update user
-router.patch('/users/me', auth, async (req, res) => {
+router.patch('/users/me', rootAuth, auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['name', 'email', 'password', 'age']
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
@@ -95,7 +96,7 @@ router.patch('/users/me', auth, async (req, res) => {
 })
 
 //delete user account
-router.delete('/users/me', auth, async (req, res) => {
+router.delete('/users/me', rootAuth, auth, async (req, res) => {
     try {
         let mailOptions = {
             from: process.env.EMAILID,
@@ -127,7 +128,7 @@ const upload = multer({
 })
 
 //upload profile photo
-router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+router.post('/users/me/avatar', rootAuth, auth, upload.single('avatar'), async (req, res) => {
     const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
     req.user.avatar = buffer
     await req.user.save()
@@ -137,14 +138,14 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
 })
 
 //delete profile photo
-router.delete('/users/me/avatar', auth, async (req, res) => {
+router.delete('/users/me/avatar', rootAuth, auth, async (req, res) => {
     req.user.avatar = undefined
     await req.user.save()
     res.send()
 })
 
 //view profile photo
-router.get('/users/me/avatar', auth, async (req, res) => {
+router.get('/users/me/avatar', rootAuth, auth, async (req, res) => {
     try {
         res.set('Content-Type', 'image/png')
         res.send(req.user.avatar)
@@ -154,12 +155,12 @@ router.get('/users/me/avatar', auth, async (req, res) => {
 })
 
 //view favourites
-router.get('/users/favourites', auth, async (req, res) => {
+router.get('/users/favourites', rootAuth, auth, async (req, res) => {
     res.send(req.user.favourites)
 })
 
 //add to favourites
-router.post('/users/favourites/:id', auth, async (req, res) => {
+router.post('/users/favourites/:id', rootAuth, auth, async (req, res) => {
 
     try {
         const id = req.params.id
@@ -173,7 +174,7 @@ router.post('/users/favourites/:id', auth, async (req, res) => {
 })
 
 //remove from favourites
-router.delete('/users/favourites/:id', auth, async (req, res) => {
+router.delete('/users/favourites/:id', rootAuth, auth, async (req, res) => {
     try {
         const favouriteID = req.params.id
         req.user.favourites = req.user.favourites.filter(product => product.productID !== favouriteID)

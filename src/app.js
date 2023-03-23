@@ -12,9 +12,9 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())//parse json to object
-app.use('/api', userRouter)
-app.use('/api', amazonRouter)
-app.use('/api', meeshoRouter)
-app.use('/api', offerRouter)
+app.use('/api/v1', userRouter)
+app.use('/api/v1', amazonRouter)
+app.use('/api/v1', meeshoRouter)
+app.use('/api/v1', offerRouter)
 
 module.exports = app
