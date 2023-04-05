@@ -55,7 +55,6 @@ router.post('/users/logout', rootAuth, auth, async (req, res) => {
             return token.token !== req.token
         })
         await req.user.save()
-
         res.status(200).send()
     } catch (e) {
         res.status(500).send()
@@ -83,11 +82,9 @@ router.patch('/users/me', rootAuth, auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['name', 'email', 'password', 'age']
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
-
     if (!isValidOperation) {
         return res.status(400).send({ error: 'Invalid updates!' })
     }
-
     try {
         updates.forEach((update) => req.user[update] = req.body[update])
         await req.user.save()

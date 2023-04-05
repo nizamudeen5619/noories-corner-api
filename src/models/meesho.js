@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema({
     Design: { type: Number },
     SKU: { type: String },
     Color: { type: String },
+    Price: { type: Number },
     Fabric: { type: String },
     ProductDescription: { type: String },
     NeckType: { type: String },
@@ -18,6 +19,6 @@ const productSchema = new mongoose.Schema({
     SizeChart: { type: String },
 })
 
-const Meesho = mongoose.model('meesho', productSchema,'meesho')
+const Meesho = mongoose.model('meesho', productSchema, 'meesho')
 
 module.exports = Meesho

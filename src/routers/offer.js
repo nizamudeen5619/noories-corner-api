@@ -6,7 +6,6 @@ const router = new express.Router()
 
 router.post('/offer/admin', rootAuth, auth, async (req, res) => {
     const product = new Offer(req.body)
-
     try {
         await product.save()
         res.status(201).send(product)
@@ -83,11 +82,9 @@ router.put('/offer/admin', rootAuth, auth, async (req, res) => {
 router.delete('/offer/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const product = await Offer.findOneAndDelete({ _id: req.params.id })
-
         if (!task) {
             return res.status(404).send()
         }
-
         res.status(200).send(product)
     } catch (e) {
         res.status(500).send()

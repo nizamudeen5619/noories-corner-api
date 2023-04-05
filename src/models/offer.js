@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema({
     Design: { type: Number },
     SKU: { type: String },
     Color: { type: String },
+    Price: { type: Number },
     Fabric: { type: String },
     ProductDescription: { type: String },
     NeckType: { type: String },
@@ -16,8 +17,9 @@ const productSchema = new mongoose.Schema({
     Image1: { type: String },
     Image2: { type: String },
     SizeChart: { type: String },
+    Platform: { type: String }
 })
 
-const Offer = mongoose.model('offer', productSchema,'offer')
+const Offer = mongoose.model('offer', productSchema, 'offer')
 
-module.exports=Offer
+module.exports = Offer

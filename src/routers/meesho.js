@@ -6,7 +6,6 @@ const router = new express.Router()
 
 router.post('/meesho/admin', rootAuth, auth, async (req, res) => {
     const product = new Meesho(req.body)
-
     try {
         await product.save()
         res.status(201).send(product)
