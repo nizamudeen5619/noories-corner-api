@@ -17,10 +17,20 @@ router.post('/meesho/admin', rootAuth, auth, async (req, res) => {
 
 router.get('/meesho', rootAuth, async (req, res) => {
     const color = req.query.color;
-    const design = parseInt(req.query.design);
-
+    const design = parseInt(req.query.design)
+    const skip = parseInt(req.query.skip) * 10 || 0
+    let query = {}
     try {
-        const products = await Meesho.find({ Color: color, Design: design })
+        if (color && !design) {
+            query = { Color: color }
+        }
+        else if (!color && design) {
+            query = { Design: design }
+        }
+        else if (color && design) {
+            query = { Color: color, Design: design }
+        }
+        const products = await Meesho.find(query).limit(10).skip(skip)
         res.status(200).send(products)
     } catch (e) {
         res.status(500).send()
@@ -73,11 +83,9 @@ router.put('/meesho/admin', rootAuth, auth, async (req, res) => {
 router.delete('/meesho/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const product = await Meesho.findOneAndDelete({ _id: req.params.id })
-
         if (!task) {
             return res.status(404).send()
         }
-
         res.status(200).send(product)
     } catch (e) {
         res.status(500).send()

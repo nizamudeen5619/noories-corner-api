@@ -16,7 +16,7 @@ let transporter = nodemailer.createTransport({
 })
 
 //register
-router.post('/users', rootAuth, async (req, res) => {
+router.post('/users/register', rootAuth, async (req, res) => {
     const user = new User(req.body)
 
     try {
@@ -29,9 +29,10 @@ router.post('/users', rootAuth, async (req, res) => {
         await transporter.sendMail(mailOptions)
         await user.save()
         const token = await user.generateAuthToken()
-        res.status(201).send({ user, token })
+        const username = user.name
+        res.status(201).send({ username, token })
     } catch (e) {
-        res.status(400).send('Email Already Exists')
+        res.status(401).send('Email Already Exists')
     }
 })
 
@@ -40,9 +41,10 @@ router.post('/users/login', rootAuth, async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         const token = await user.generateAuthToken()
-        res.send({ user, token })
+        const username = user.name
+        res.status(200).send({ username, token })
     } catch (e) {
-        res.status(400).send()
+        res.status(401).send()
     }
 })
 
@@ -54,7 +56,7 @@ router.post('/users/logout', rootAuth, auth, async (req, res) => {
         })
         await req.user.save()
 
-        res.send()
+        res.status(200).send()
     } catch (e) {
         res.status(500).send()
     }
@@ -65,7 +67,7 @@ router.post('/users/logoutAll', rootAuth, auth, async (req, res) => {
     try {
         req.user.tokens = []
         await req.user.save()
-        res.send()
+        res.status(200).send()
     } catch (e) {
         res.status(500).send()
     }
@@ -89,7 +91,7 @@ router.patch('/users/me', rootAuth, auth, async (req, res) => {
     try {
         updates.forEach((update) => req.user[update] = req.body[update])
         await req.user.save()
-        res.send(req.user)
+        res.status(200).send(req.user.name)
     } catch (e) {
         res.status(400).send(e)
     }
@@ -106,7 +108,7 @@ router.delete('/users/me', rootAuth, auth, async (req, res) => {
         }
         await transporter.sendMail(mailOptions)
         await req.user.remove()
-        res.send(req.user)
+        res.status(200).send()
     } catch (e) {
         res.status(500).send()
     }
@@ -122,13 +124,13 @@ const upload = multer({
         if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
             return cb(new Error('Please upload an image'))
         }
-
         cb(undefined, true)
     }
 })
 
 //upload profile photo
 router.post('/users/me/avatar', rootAuth, auth, upload.single('avatar'), async (req, res) => {
+    console.log(req.file);
     const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
     req.user.avatar = buffer
     await req.user.save()
@@ -141,14 +143,16 @@ router.post('/users/me/avatar', rootAuth, auth, upload.single('avatar'), async (
 router.delete('/users/me/avatar', rootAuth, auth, async (req, res) => {
     req.user.avatar = undefined
     await req.user.save()
-    res.send()
+    res.status(200).send()
+}, (error, req, res, next) => {
+    res.status(400).send({ error: error.message })
 })
 
 //view profile photo
 router.get('/users/me/avatar', rootAuth, auth, async (req, res) => {
     try {
         res.set('Content-Type', 'image/png')
-        res.send(req.user.avatar)
+        res.status(200).send(req.user.avatar)
     } catch (e) {
         res.status(404).send()
     }
@@ -157,6 +161,8 @@ router.get('/users/me/avatar', rootAuth, auth, async (req, res) => {
 //view favourites
 router.get('/users/favourites', rootAuth, auth, async (req, res) => {
     res.send(req.user.favourites)
+}, (error, req, res, next) => {
+    res.status(400).send({ error: error.message })
 })
 
 //add to favourites
@@ -167,7 +173,7 @@ router.post('/users/favourites/:id', rootAuth, auth, async (req, res) => {
         req.user.favourites = req.user.favourites.filter(product => product.productID !== id)
         req.user.favourites.push({ productID: id })
         await req.user.save()
-        res.send(req.user)
+        res.status(200).send()
     } catch (e) {
         res.status(400).send(e)
     }

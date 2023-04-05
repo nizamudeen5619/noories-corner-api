@@ -17,10 +17,20 @@ router.post('/offer/admin', rootAuth, auth, async (req, res) => {
 
 router.get('/offer', rootAuth, async (req, res) => {
     const color = req.query.color;
-    const design = parseInt(req.query.design);
-
+    const design = parseInt(req.query.design)
+    const skip = parseInt(req.query.skip) * 10 || 0
+    let query = {}
     try {
-        const products = await Offer.find({ Color: color, Design: design })
+        if (color && !design) {
+            query = { Color: color }
+        }
+        else if (!color && design) {
+            query = { Design: design }
+        }
+        else if (color && design) {
+            query = { Color: color, Design: design }
+        }
+        const products = await Offer.find(query).limit(10).skip(skip)
         res.status(200).send(products)
     } catch (e) {
         res.status(500).send()

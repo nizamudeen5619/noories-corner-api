@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const productSchema = new mongoose.Schema({
     ProductId: { type: String | Number },
     ProductName: { type: String },
-    Design: { type: String },
+    Design: { type: Number },
     SKU: { type: String },
     Color: { type: String },
     Fabric: { type: String },
@@ -18,6 +18,6 @@ const productSchema = new mongoose.Schema({
     SizeChart: { type: String },
 })
 
-const Offer = mongoose.model('offer', productSchema)
+const Offer = mongoose.model('offer', productSchema,'offer')
 
 module.exports=Offer
