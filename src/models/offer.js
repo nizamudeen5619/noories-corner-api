@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema({
     SKU: { type: String },
     Color: { type: String },
     Price: { type: Number },
+    Rating: { type: Number },
     Fabric: { type: String },
     ProductDescription: { type: String },
     NeckType: { type: String },

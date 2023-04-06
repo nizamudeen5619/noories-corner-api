@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema({
     SKU: { type: String },
     Color: { type: String },
     Price: { type: Number },
+    Rating: { type: Number },
     Fabric: { type: String },
     ProductDescription: { type: String },
     NeckType: { type: String },
@@ -16,7 +17,7 @@ const productSchema = new mongoose.Schema({
     Size: { type: String | Number },
     Image1: { type: String },
     Image2: { type: String },
-    SizeChart: { type: String },
+    SizeChart: { type: String }
 })
 
 const Amazon = mongoose.model('amazon', productSchema, 'amazon')

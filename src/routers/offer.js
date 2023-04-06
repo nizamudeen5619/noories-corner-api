@@ -29,7 +29,7 @@ router.get('/offer', rootAuth, async (req, res) => {
         else if (color && design) {
             query = { Color: color, Design: design }
         }
-        const products = await Offer.find(query).limit(10).skip(skip)
+        const products = await Offer.find(query,'ProductName Design Color Price Rating Image1').limit(10).skip(skip)
         res.status(200).send(products)
     } catch (e) {
         res.status(500).send()
