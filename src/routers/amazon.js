@@ -1,8 +1,10 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const rootAuth = require('../middleware/root-auth');
-const Amazon = require('../models/amazon')
-const router = new express.Router()
+import { Router } from 'express';
+import auth from '../middleware/auth.js';
+import rootAuth from '../middleware/root-auth.js';
+import Amazon from '../models/amazon.js';
+import { pageGenerator } from './page-generator.js';
+
+const router = new Router()
 
 router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
     const product = new Amazon(req.body)
@@ -15,23 +17,21 @@ router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
 })
 
 router.get('/amazon', rootAuth, async (req, res) => {
-    const color = req.query.color;
-    const design = parseInt(req.query.design)
-    const skip = parseInt(req.query.skip) * 10 || 0
-    let query = {}
     try {
-        if (color && !design) {
-            query = { Color: color }
+        const color = req.query.color;
+        const design = parseInt(req.query.design)
+        const skip = parseInt(req.query.page) * 10 || 0
+        let query = {}
+        if (color) {
+            query['Color'] = color
         }
-        else if (!color && design) {
-            query = { Design: design }
+        if (design) {
+            query['Design'] = design
         }
-        else if (color && design) {
-            query = { Color: color, Design: design }
-        }
-        const products = await Amazon.find(query,'ProductName Design Color Price Rating Image1').limit(10).skip(skip)
-        console.log(products);
-        res.status(200).send(products)
+        const products = await Amazon.find(query, 'ProductName Design Color Price Rating Image1').limit(10).skip(skip)
+        const count = await Amazon.countDocuments({})
+        const pages = pageGenerator(query, products.length, count)
+        return res.status(200).send({ products, pages })
     } catch (e) {
         res.status(500).send()
     }
@@ -92,4 +92,6 @@ router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
     }
 })
 
-module.exports = router
+
+
+export default router

@@ -1,6 +1,6 @@
-const mongoose = require('mongoose')
+import { Schema, model } from 'mongoose'
 
-const productSchema = new mongoose.Schema({
+const productSchema = new Schema({
     ProductId: { type: String | Number },
     ProductName: { type: String },
     Design: { type: Number },
@@ -20,6 +20,6 @@ const productSchema = new mongoose.Schema({
     SizeChart: { type: String }
 })
 
-const Amazon = mongoose.model('amazon', productSchema, 'amazon')
+const Amazon = model('amazon', productSchema, 'amazon')
 
-module.exports = Amazon
+export default Amazon

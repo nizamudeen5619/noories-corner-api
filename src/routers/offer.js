@@ -1,8 +1,9 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const rootAuth = require('../middleware/root-auth');
-const Offer = require('../models/offer')
-const router = new express.Router()
+import { Router } from 'express';
+import auth from '../middleware/auth.js';
+import rootAuth from '../middleware/root-auth.js';
+import Offer from '../models/offer.js';
+
+const router = new Router()
 
 router.post('/offer/admin', rootAuth, auth, async (req, res) => {
     const product = new Offer(req.body)
@@ -18,6 +19,7 @@ router.get('/offer', rootAuth, async (req, res) => {
     const color = req.query.color;
     const design = parseInt(req.query.design)
     const skip = parseInt(req.query.skip) * 10 || 0
+    let count = 0
     let query = {}
     try {
         if (color && !design) {
@@ -29,7 +31,7 @@ router.get('/offer', rootAuth, async (req, res) => {
         else if (color && design) {
             query = { Color: color, Design: design }
         }
-        const products = await Offer.find(query,'ProductName Design Color Price Rating Image1').limit(10).skip(skip)
+        const products = await Offer.find(query, 'ProductName Design Color Price Rating Image1').limit(10).skip(skip)
         res.status(200).send(products)
     } catch (e) {
         res.status(500).send()
@@ -91,4 +93,4 @@ router.delete('/offer/admin/:id', rootAuth, auth, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router

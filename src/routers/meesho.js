@@ -1,8 +1,9 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const rootAuth = require('../middleware/root-auth');
-const Meesho = require('../models/meesho')
-const router = new express.Router()
+import { Router } from 'express';
+import auth from '../middleware/auth.js';
+import rootAuth from '../middleware/root-auth.js';
+import Meesho from '../models/meesho.js';
+
+const router = new Router()
 
 router.post('/meesho/admin', rootAuth, auth, async (req, res) => {
     const product = new Meesho(req.body)
@@ -39,7 +40,7 @@ router.get('/meesho', rootAuth, async (req, res) => {
 router.get('/meesho/:id', rootAuth, async (req, res) => {
     const _id = req.params.id
     try {
-        const product = await Meesho.findOne({ _id })
+        const product = await findOne({ _id })
         if (!product) {
             return res.status(404).send()
         }
@@ -91,4 +92,4 @@ router.delete('/meesho/admin/:id', rootAuth, auth, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router

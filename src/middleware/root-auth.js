@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken')
+import { verify } from 'jsonwebtoken'
 
 const rootAuth = async (req, res, next) => {
     try {
         const token$ = req.header('apipass').trim()
-        const decoded = jwt.verify(token$, process.env.JWT_SECRET)
+        const decoded = verify(token$, process.env.JWT_SECRET)
         if (!token$ || !decoded) {
             throw new Error('Unauthorised')
         }
@@ -18,4 +18,4 @@ const rootAuth = async (req, res, next) => {
     }
 }
 
-module.exports = rootAuth
+export default rootAuth

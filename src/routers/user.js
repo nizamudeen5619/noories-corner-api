@@ -1,11 +1,11 @@
-const express = require('express')
-const multer = require('multer')
-const sharp = require('sharp')
-const nodemailer = require('nodemailer');
-const User = require('../models/user')
-const auth = require('../middleware/auth');
-const rootAuth = require('../middleware/root-auth');
-const router = new express.Router()
+import { Router } from 'express';
+import multer from 'multer';
+import sharp from 'sharp';
+import nodemailer from 'nodemailer';
+import User from '../models/user.js';
+import auth from '../middleware/auth.js';
+import rootAuth from '../middleware/root-auth.js';
+const router = new Router()
 
 let transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -189,4 +189,4 @@ router.delete('/users/favourites/:id', rootAuth, auth, async (req, res) => {
 })
 
 
-module.exports = router
+export default router

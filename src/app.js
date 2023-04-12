@@ -1,12 +1,12 @@
-const express = require('express')
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
 
-require('./db/mongoose')
+import './db/mongoose.js';
 
-const userRouter = require('./routers/user')
-const amazonRouter = require('./routers/amazon')
-const meeshoRouter = require('./routers/meesho')
-const offerRouter = require('./routers/offer')
+import userRouter from './routers/user.js';
+import amazonRouter from './routers/amazon.js';
+import meeshoRouter from './routers/meesho.js';
+import offerRouter from './routers/offer.js';
 
 const app = express()
 
@@ -17,4 +17,4 @@ app.use('/api/v1', amazonRouter)
 app.use('/api/v1', meeshoRouter)
 app.use('/api/v1', offerRouter)
 
-module.exports = app
+export default app
