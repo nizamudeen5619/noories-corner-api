@@ -2,6 +2,7 @@ import { Router } from 'express';
 import auth from '../middleware/auth.js';
 import rootAuth from '../middleware/root-auth.js';
 import Meesho from '../models/meesho.js';
+import { pageGenerator } from './page-generator.js';
 
 const router = new Router()
 
@@ -16,31 +17,42 @@ router.post('/meesho/admin', rootAuth, auth, async (req, res) => {
 })
 
 router.get('/meesho', rootAuth, async (req, res) => {
-    const color = req.query.color;
-    const design = parseInt(req.query.design)
-    const skip = parseInt(req.query.skip) * 10 || 0
-    let query = {}
     try {
-        if (color && !design) {
-            query = { Color: color }
+        const color = JSON.parse(req.query.color)
+        let design = JSON.parse(req.query.design)
+        design = design.map((item) => ({ Design: parseInt(item.Design) }))
+        let query = []
+        if (!color.length && !design.length) {
+            query = []
         }
-        else if (!color && design) {
-            query = { Design: design }
+        if (!color.length) {
+            query = [...design]
         }
-        else if (color && design) {
-            query = { Color: color, Design: design }
+        else if (!design.length) {
+            query = [...color]
         }
-        const products = await Meesho.find(query,'ProductName Design Color Price Rating Image1').limit(10).skip(skip)
-        res.status(200).send(products)
+        else {
+            for (let designItem of design) {
+                for (let colorItem of color) {
+                    query.push({ Design: designItem.Design, Color: colorItem.Color })
+                }
+            }
+        }
+        const skip = parseInt(req.query.page) * 12 || 0
+        const products = await Meesho.find({ $or: query }, 'ProductName Design Color Price Rating Image1').limit(12).skip(skip)
+        const count = await Meesho.countDocuments({})
+        const pages = pageGenerator(query, products.length, count)
+        return res.status(200).send({ products, pages })
     } catch (e) {
         res.status(500).send()
     }
+
 })
 
 router.get('/meesho/:id', rootAuth, async (req, res) => {
     const _id = req.params.id
     try {
-        const product = await findOne({ _id })
+        const product = await Meesho.findOne({ _id })
         if (!product) {
             return res.status(404).send()
         }
