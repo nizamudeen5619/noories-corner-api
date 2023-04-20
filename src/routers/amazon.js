@@ -18,17 +18,28 @@ router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
 
 router.get('/amazon', rootAuth, async (req, res) => {
     try {
-        const color = req.query.color;
-        const design = parseInt(req.query.design)
-        const skip = parseInt(req.query.page) * 10 || 0
-        let query = {}
-        if (color) {
-            query['Color'] = color
+        const color = JSON.parse(req.query.color)
+        let design = JSON.parse(req.query.design)
+        design = design.map((item) => ({ Design: parseInt(item.Design) }))
+        let query = []
+        if (!color.length && !design.length) {
+            query = []
         }
-        if (design) {
-            query['Design'] = design
+        if (!color.length) {
+            query = [...design]
         }
-        const products = await Amazon.find(query, 'ProductName Design Color Price Rating Image1').limit(10).skip(skip)
+        else if (!design.length) {
+            query = [...color]
+        }
+        else {
+            for (let designItem of design) {
+                for (let colorItem of color) {
+                    query.push({ Design: designItem.Design, Color: colorItem.Color })
+                }
+            }
+        }
+        const skip = parseInt(req.query.page) * 12 || 0
+        const products = await Amazon.find({ $or: query }, 'ProductName Design Color Price Rating Image1').limit(12).skip(skip)
         const count = await Amazon.countDocuments({})
         const pages = pageGenerator(query, products.length, count)
         return res.status(200).send({ products, pages })
