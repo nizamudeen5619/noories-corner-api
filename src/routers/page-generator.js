@@ -1,6 +1,6 @@
-const pageGenerator=function (query, currentCOunt, count) {
+const pageGenerator = function (query, currentCOunt, count) {
     let pages = []
-    if (query && Object.keys(query).length === 0 && Object.getPrototypeOf(query) === Object.prototype) {
+    if (query.length === 0) {
         count = Math.ceil(count / 10)
         for (let itr = 1; itr <= count; itr++) {
             pages.push({ page: itr })
