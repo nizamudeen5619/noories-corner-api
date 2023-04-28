@@ -7,101 +7,145 @@ import { pageGenerator } from './page-generator.js';
 const router = new Router()
 
 router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
-    const product = new Amazon(req.body)
     try {
+        const product = new Amazon(req.body)
+        await product.validate(); // This will throw an error if the input is invalid
         await product.save()
         res.status(201).send(product)
     } catch (e) {
-        res.status(400).send(e)
+        switch (e.code) {
+            case 11000:
+                return res.status(409).send({ error: 'Product already exists' });
+            case 12000 || 12500:
+                return res.status(409).send({ error: `Validation Error: ${e.message}` });
+            default:
+                return res.status(500).send({ error: 'Internal server error' });
+        }
     }
 })
 
 router.get('/amazon', rootAuth, async (req, res) => {
     try {
-        const color = JSON.parse(req.query.color)
-        let design = JSON.parse(req.query.design)
-        design = design.map((item) => ({ Design: parseInt(item.Design) }))
-        let query = []
-        if (!color.length && !design.length) {
-            query = []
-        }
-        if (!color.length) {
-            query = [...design]
-        }
-        else if (!design.length) {
-            query = [...color]
-        }
-        else {
-            for (let designItem of design) {
-                for (let colorItem of color) {
-                    query.push({ Design: designItem.Design, Color: colorItem.Color })
-                }
-            }
-        }
-        const skip = parseInt(req.query.page) * 12 || 0
-        const products = await Amazon.find({ $or: query }, 'ProductName Design Color Price Rating Image1').limit(12).skip(skip)
-        const count = await Amazon.countDocuments({})
-        const pages = pageGenerator(query, products.length, count)
-        return res.status(200).send({ products, pages })
-    } catch (e) {
-        res.status(500).send()
+        const { color, design, page } = req.query;
+        const colorArray = JSON.parse(color);
+        const designArray = JSON.parse(design);
+        const skip = parseInt(page) * 12 || 0;
+        const query = colorArray.length && designArray.length
+            ? designArray.flatMap((designItem) =>
+                colorArray.map((colorItem) => ({
+                    Design: parseInt(designItem.Design),
+                    Color: colorItem.Color,
+                }))
+            )
+            : [...colorArray, ...designArray].map((item) => ({
+                Design: parseInt(item.Design),
+            }));
+        const products = await Amazon.find(
+            { $or: query },
+            'ProductName Design Color Price Rating Image1'
+        )
+            .limit(12)
+            .skip(skip);
+        const count = await Amazon.countDocuments({});
+        return res.status(200).send({
+            products,
+            pages: pageGenerator(query, products.length, count),
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send();
     }
-})
+});
 
 router.get('/amazon/:id', rootAuth, async (req, res) => {
-    const _id = req.params.id
     try {
-        const product = await Amazon.findOne({ _id })
-        if (!product) {
-            return res.status(404).send()
+        const id = req.params.id;
+        // Validate the input
+        if (!isValidId(id)) {
+            return res.status(400).send({ error: 'Invalid ID' });
         }
-        res.status(200).send(product)
+        // Fetch the product or throw an error if not found
+        const product = await Amazon.findOneOrFail({ _id: id });
+        res.status(200).send(product);
     } catch (e) {
-        res.status(500).send()
+        // Handle errors and send a meaningful error response
+        if (e.name === 'EntityNotFoundError') {
+            return res.status(404).send({ error: 'Product not found' });
+        } else {
+            console.error(e);
+            return res.status(500).send({ error: 'Internal server error' });
+        }
     }
-})
+});
+
+function isValidId(id) {
+    return mongoose.isValidObjectId(id);
+}
 
 router.put('/amazon/admin', rootAuth, auth, async (req, res) => {
     try {
-        const product = await Amazon.findOne({ _id: req.body._id })
+        const {
+            ProductId,
+            ProductName,
+            Design,
+            SKU,
+            Color,
+            Fabric,
+            ProductDescription,
+            NeckType,
+            Occassion,
+            BrandName,
+            StitchType,
+            Size,
+            Image1,
+            Image2,
+            SizeChart,
+        } = req.body;
+        const product = await Amazon.findByIdAndUpdate(
+            req.body._id,
+            {
+                ProductId,
+                ProductName,
+                Design,
+                SKU,
+                Color,
+                Fabric,
+                ProductDescription,
+                NeckType,
+                Occassion,
+                BrandName,
+                StitchType,
+                Size,
+                Image1,
+                Image2,
+                SizeChart,
+            },
+            { new: true }
+        );
         if (!product) {
-            return res.status(400).send()
+            return res.status(404).send();
         }
-        product.ProductId = req.body.ProductId
-        product.ProductName = req.body.ProductName
-        product.Design = req.body.Design
-        product.SKU = req.body.SKU
-        product.Color = req.body.Color
-        product.Fabric = req.body.Fabric
-        product.ProductDescription = req.body.ProductDescription
-        product.NeckType = req.body.NeckType
-        product.Occassion = req.body.Occassion
-        product.BrandName = req.body.BrandName
-        product.StitchType = req.body.StitchType
-        product.Size = req.body.Size
-        product.Image1 = req.body.Image1
-        product.Image2 = req.body.Image2
-        product.SizeChart = req.body.SizeChart
-
-        await product.save()
-        res.status.send(product)
-    } catch (e) {
-        res.status(500).send()
+        return res.status(200).send(product);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send();
     }
-})
+});
 
 
 router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
     try {
-        const product = await Amazon.findOneAndDelete({ _id: req.params.id })
-        if (!task) {
-            return res.status(404).send()
+        const { id } = req.params;
+        const product = await Amazon.findOneAndDelete({ _id: id });
+        if (!product) {
+            return res.status(404).send();
         }
-        res.status(200).send(product)
-    } catch (e) {
-        res.status(500).send()
+        return res.status(200).send(product);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send();
     }
-})
+});
 
 
 

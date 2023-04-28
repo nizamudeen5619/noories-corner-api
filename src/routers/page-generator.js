@@ -1,18 +1,11 @@
-const pageGenerator = function (query, currentCOunt, count) {
-    let pages = []
-    if (query.length === 0) {
-        count = Math.ceil(count / 10)
-        for (let itr = 1; itr <= count; itr++) {
-            pages.push({ page: itr })
-        }
-    }
-    else {
-        currentCOunt = Math.ceil(currentCOunt / 10)
-        for (let itr = 1; itr <= currentCOunt; itr++) {
-            pages.push({ page: itr })
-        }
-    }
-    return pages
+const ITEMS_PER_PAGE = 10;
+
+const pageGenerator = function (query, currentCount, count) {
+    const totalCount = (query.length === 0) ? count : currentCount;
+    const pageCount = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+    return Array.from({ length: pageCount }, (_, index) => ({ page: index + 1 }));
 }
+
 
 export { pageGenerator }

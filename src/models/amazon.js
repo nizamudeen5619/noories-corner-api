@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose'
+import SanitizeHTML from "sanitize-html";
 
 const productSchema = new Schema({
     ProductId: { type: String | Number },
@@ -20,6 +21,12 @@ const productSchema = new Schema({
     SizeChart: { type: String }
 })
 
+productSchema.pre('save', async function (next) {
+    this.ProductDescription = SanitizeHTML(this.ProductDescription);
+    next()
+})
+
 const Amazon = model('amazon', productSchema, 'amazon')
+
 
 export default Amazon

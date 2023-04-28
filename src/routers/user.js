@@ -162,15 +162,30 @@ router.get('/users/favourites', rootAuth, auth, async (req, res) => {
     res.status(400).send({ error: error.message })
 })
 
+//check favourites
+router.get('/users/favourites/:id', rootAuth, auth, async (req, res) => {
+    const id = req.params.id
+    let checkFavourite = false
+    for (let favourite of req.user.favourites) {
+        if (favourite.productID === id) {
+            checkFavourite = true
+            break;
+        }
+    }
+    res.status(200).send({ checkFavourite })
+}, (error, req, res, next) => {
+    res.status(400).send({ error: error.message })
+})
+
+
 //add to favourites
 router.post('/users/favourites/:id', rootAuth, auth, async (req, res) => {
-
     try {
         const id = req.params.id
         req.user.favourites = req.user.favourites.filter(product => product.productID !== id)
         req.user.favourites.push({ productID: id })
         await req.user.save()
-        res.status(200).send()
+        res.status(200).send({ addedToFavourites: true })
     } catch (e) {
         res.status(400).send(e)
     }
@@ -182,7 +197,7 @@ router.delete('/users/favourites/:id', rootAuth, auth, async (req, res) => {
         const favouriteID = req.params.id
         req.user.favourites = req.user.favourites.filter(product => product.productID !== favouriteID)
         await req.user.save()
-        res.status(200).send(req.user.favourites)
+        res.status(200).send({ removedFromFavourites: true })
     } catch (error) {
         res.status(400).send(e)
     }

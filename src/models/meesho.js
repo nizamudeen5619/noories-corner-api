@@ -20,6 +20,11 @@ const productSchema = new Schema({
     SizeChart: { type: String }
 })
 
+productSchema.pre('save', async function (next) {
+    this.ProductDescription = SanitizeHTML(this.ProductDescription);
+    next()
+})
+
 const Meesho = model('meesho', productSchema, 'meesho')
 
 export default Meesho

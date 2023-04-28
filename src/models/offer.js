@@ -21,6 +21,11 @@ const productSchema = new Schema({
     Platform: { type: String }
 })
 
+productSchema.pre('save', async function (next) {
+    this.ProductDescription = SanitizeHTML(this.ProductDescription);
+    next()
+})
+
 const Offer = model('offer', productSchema, 'offer')
 
 export default Offer
