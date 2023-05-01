@@ -6,6 +6,7 @@ import { pageGenerator } from './page-generator.js';
 
 const router = new Router()
 
+//add product to meesho collection
 router.post('/meesho/admin', rootAuth, auth, async (req, res) => {
     try {
         const product = new Meesho(req.body)
@@ -24,6 +25,7 @@ router.post('/meesho/admin', rootAuth, auth, async (req, res) => {
     }
 })
 
+//get products from meesho collection
 router.get('/meesho', rootAuth, async (req, res) => {
     try {
         const { color, design, page } = req.query;
@@ -42,11 +44,10 @@ router.get('/meesho', rootAuth, async (req, res) => {
             }));
         const products = await Meesho.find(
             { $or: query },
-            'ProductName Design Color Price Rating Image1'
+            'ProductName Price Rating Image1'
         )
             .limit(12)
             .skip(skip);
-
         const count = await Meesho.countDocuments({});
         return res.status(200).send({
             products,
@@ -58,6 +59,7 @@ router.get('/meesho', rootAuth, async (req, res) => {
     }
 });
 
+//get product with id from meesho collection
 router.get('/meesho/:id', rootAuth, async (req, res) => {
     try {
         const id = req.params.id;
@@ -83,6 +85,7 @@ function isValidId(id) {
     return mongoose.isValidObjectId(id);
 }
 
+//update product in meesho collection
 router.put('/meesho/admin', rootAuth, auth, async (req, res) => {
     try {
         const {
@@ -133,7 +136,7 @@ router.put('/meesho/admin', rootAuth, auth, async (req, res) => {
     }
 });
 
-
+//delete product in meesho collection
 router.delete('/meesho/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const { id } = req.params;

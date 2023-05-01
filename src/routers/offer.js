@@ -2,9 +2,11 @@ import { Router } from 'express';
 import auth from '../middleware/auth.js';
 import rootAuth from '../middleware/root-auth.js';
 import Offer from '../models/offer.js';
+import { pageGenerator } from './page-generator.js';
 
 const router = new Router()
 
+//add product to offer collection
 router.post('/offer/admin', rootAuth, auth, async (req, res) => {
     try {
         const product = new Offer(req.body)
@@ -23,13 +25,13 @@ router.post('/offer/admin', rootAuth, auth, async (req, res) => {
     }
 })
 
+//get products from offer collection
 router.get('/offer', rootAuth, async (req, res) => {
     try {
         const { color, design, page } = req.query;
         const colorArray = JSON.parse(color);
         const designArray = JSON.parse(design);
         const skip = parseInt(page) * 12 || 0;
-
         const query = colorArray.length && designArray.length
             ? designArray.flatMap((designItem) =>
                 colorArray.map((colorItem) => ({
@@ -40,16 +42,13 @@ router.get('/offer', rootAuth, async (req, res) => {
             : [...colorArray, ...designArray].map((item) => ({
                 Design: parseInt(item.Design),
             }));
-
         const products = await Offer.find(
             { $or: query },
-            'ProductName Design Color Price Rating Image1'
+            'ProductName Price Rating Image1'
         )
             .limit(12)
             .skip(skip);
-
         const count = await Offer.countDocuments({});
-
         return res.status(200).send({
             products,
             pages: pageGenerator(query, products.length, count),
@@ -60,6 +59,7 @@ router.get('/offer', rootAuth, async (req, res) => {
     }
 });
 
+//get product with id from offer collection
 router.get('/offer/:id', rootAuth, async (req, res) => {
     try {
         const id = req.params.id;
@@ -85,6 +85,7 @@ function isValidId(id) {
     return mongoose.isValidObjectId(id);
 }
 
+//update product in offer collection
 router.put('/offer/admin', rootAuth, auth, async (req, res) => {
     try {
         const {
@@ -135,7 +136,7 @@ router.put('/offer/admin', rootAuth, auth, async (req, res) => {
     }
 });
 
-
+//delete product in offer collection
 router.delete('/offer/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const { id } = req.params;
@@ -149,5 +150,6 @@ router.delete('/offer/admin/:id', rootAuth, auth, async (req, res) => {
         return res.status(500).send();
     }
 });
+
 
 export default router

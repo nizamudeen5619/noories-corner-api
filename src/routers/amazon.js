@@ -6,6 +6,7 @@ import { pageGenerator } from './page-generator.js';
 
 const router = new Router()
 
+//add product to amazon collection
 router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
     try {
         const product = new Amazon(req.body)
@@ -24,6 +25,7 @@ router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
     }
 })
 
+//get products from amazon collection
 router.get('/amazon', rootAuth, async (req, res) => {
     try {
         const { color, design, page } = req.query;
@@ -42,7 +44,7 @@ router.get('/amazon', rootAuth, async (req, res) => {
             }));
         const products = await Amazon.find(
             { $or: query },
-            'ProductName Design Color Price Rating Image1'
+            'ProductName Price Rating Image1'
         )
             .limit(12)
             .skip(skip);
@@ -57,6 +59,7 @@ router.get('/amazon', rootAuth, async (req, res) => {
     }
 });
 
+//get product with id from amazon collection
 router.get('/amazon/:id', rootAuth, async (req, res) => {
     try {
         const id = req.params.id;
@@ -82,6 +85,7 @@ function isValidId(id) {
     return mongoose.isValidObjectId(id);
 }
 
+//update product in amazon collection
 router.put('/amazon/admin', rootAuth, auth, async (req, res) => {
     try {
         const {
@@ -132,7 +136,7 @@ router.put('/amazon/admin', rootAuth, auth, async (req, res) => {
     }
 });
 
-
+//delete product in amazon collection
 router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
     try {
         const { id } = req.params;
@@ -146,7 +150,6 @@ router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
         return res.status(500).send();
     }
 });
-
 
 
 export default router
