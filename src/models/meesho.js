@@ -20,6 +20,14 @@ const productSchema = new Schema({
     SizeChart: { type: String }
 })
 
+productSchema.statics.findOneOrFail = async function (query) {
+    const result = await this.findOne(query);
+    if (!result) {
+        throw new Error('Prouct not found');
+    }
+    return result;
+};
+
 productSchema.pre('save', async function (next) {
     this.ProductDescription = SanitizeHTML(this.ProductDescription);
     next()

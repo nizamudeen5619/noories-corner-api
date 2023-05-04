@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import mongoose from 'mongoose'
+
 import auth from '../middleware/auth.js';
 import rootAuth from '../middleware/root-auth.js';
 import Offer from '../models/offer.js';
