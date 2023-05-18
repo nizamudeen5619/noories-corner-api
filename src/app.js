@@ -13,7 +13,6 @@ import './db/mongoose.js';
 import userRouter from './routers/user.js';
 import amazonRouter from './routers/amazon.js';
 import meeshoRouter from './routers/meesho.js';
-import offerRouter from './routers/offer.js';
 
 //Create logs folder , access.log,error.log,combined.log files
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,7 +54,6 @@ const apiVersion = process.env.API_VERSION || 'v1';
 app.use(`/api/${apiVersion}`, userRouter);
 app.use(`/api/${apiVersion}`, amazonRouter);
 app.use(`/api/${apiVersion}`, meeshoRouter);
-app.use(`/api/${apiVersion}`, offerRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
