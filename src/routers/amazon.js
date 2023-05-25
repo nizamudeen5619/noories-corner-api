@@ -41,9 +41,14 @@ router.get('/amazon', rootAuth, async (req, res) => {
                     Color: colorItem.Color,
                 }))
             )
-            : [...colorArray, ...designArray].map((item) => ({
-                Design: parseInt(item.Design),
-            }));
+            : [...colorArray, ...designArray].map((item) => {
+                if (item.Color) {
+                    return { Color: item.Color }
+                }
+                if (item.Design) {
+                    return { Design: parseInt(item.Design) }
+                }
+            });
         const products = await Amazon.find(
             { $or: query },
             'ProductName Price Rating Image1'
