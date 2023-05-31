@@ -43,11 +43,11 @@ router.get('/amazon', rootAuth, async (req, res) => {
             )
             : [...colorArray, ...designArray].map((item) => {
                 if (item.Color) {
-                    return { Color: item.Color }
+                    return { Color: item.Color };
+                } else if (item.Design) {
+                    return { Design: parseInt(item.Design) };
                 }
-                if (item.Design) {
-                    return { Design: parseInt(item.Design) }
-                }
+                return {};
             });
         const products = await Amazon.find(
             { $or: query },
@@ -158,5 +158,19 @@ router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
     }
 });
 
+router.get('/amazon/top', rootAuth, async (req, res) => {
+    try {
+        const query = [{ topSelling: true }, { topRated: true }];
+        const products = await Amazon.find(
+            { $or: query },
+            'ProductName Price Rating Image1'
+        )
+        return res.status(200).send(products);
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).send();
+    }
+})
 
 export default router

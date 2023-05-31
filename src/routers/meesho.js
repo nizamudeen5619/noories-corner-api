@@ -158,5 +158,20 @@ router.delete('/meesho/admin/:id', rootAuth, auth, async (req, res) => {
     }
 });
 
+router.get('/meesho/top', rootAuth, async (req, res) => {
+    try {
+        const query = [{ topSelling: true }, { topRated: true }];
+        const products = await Meesho.find(
+            { $or: query },
+            'ProductName Price Rating Image1'
+        )
+        return res.status(200).send(products);
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).send();
+    }
+});
+
 
 export default router

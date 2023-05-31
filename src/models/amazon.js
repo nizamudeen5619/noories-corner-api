@@ -18,7 +18,9 @@ const productSchema = new Schema({
     Size: { type: String | Number },
     Image1: { type: String },
     Image2: { type: String },
-    SizeChart: { type: String }
+    SizeChart: { type: String },
+    topSelling: { type: Boolean },
+    topRated: { type: Boolean }
 })
 
 productSchema.statics.findOneOrFail = async function (query) {
