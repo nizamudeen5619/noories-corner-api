@@ -158,14 +158,11 @@ router.delete('/meesho/admin/:id', rootAuth, auth, async (req, res) => {
     }
 });
 
-router.get('/meesho/top', rootAuth, async (req, res) => {
+router.get('/meeshotop', rootAuth, async (req, res) => {
     try {
-        const query = [{ topSelling: true }, { topRated: true }];
-        const products = await Meesho.find(
-            { $or: query },
-            'ProductName Price Rating Image1'
-        )
-        return res.status(200).send(products);
+        const topSelling = await Meesho.find({ topSelling: true }, 'ProductName Price Rating Image1')
+        const topRated = await Meesho.find({ topRated: true }, 'ProductName Price Rating Image1')
+        return res.status(200).send({ topSelling, topRated });
     }
     catch (error) {
         console.error(error);

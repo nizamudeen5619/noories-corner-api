@@ -31,8 +31,8 @@ router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
 router.get('/amazon', rootAuth, async (req, res) => {
     try {
         const { color, design, page } = req.query;
-        const colorArray = JSON.parse(color);
-        const designArray = JSON.parse(design);
+        const colorArray = color ? JSON.parse(color) : [];
+        const designArray = design ? JSON.parse(design) : [];
         const skip = parseInt(page) * 12 || 0;
         const query = colorArray.length && designArray.length
             ? designArray.flatMap((designItem) =>
@@ -158,14 +158,11 @@ router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
     }
 });
 
-router.get('/amazon/top', rootAuth, async (req, res) => {
+router.get('/amazontop', rootAuth, async (req, res) => {
     try {
-        const query = [{ topSelling: true }, { topRated: true }];
-        const products = await Amazon.find(
-            { $or: query },
-            'ProductName Price Rating Image1'
-        )
-        return res.status(200).send(products);
+        const topSelling = await Amazon.find({ topSelling: true }, 'ProductName Price Rating Image1')
+        const topRated = await Amazon.find({ topRated: true }, 'ProductName Price Rating Image1')
+        return res.status(200).send({ topSelling, topRated });
     }
     catch (error) {
         console.error(error);
