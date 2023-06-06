@@ -160,8 +160,8 @@ router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
 
 router.get('/amazontop', rootAuth, async (req, res) => {
     try {
-        const topSelling = await Amazon.find({ topSelling: true }, 'ProductName Price Rating Image1')
-        const topRated = await Amazon.find({ topRated: true }, 'ProductName Price Rating Image1')
+        const topSelling = await Amazon.find({ topSelling: true }, 'ProductName Image1')
+        const topRated = await Amazon.find({ topRated: true }, 'ProductName Image1')
         return res.status(200).send({ topSelling, topRated });
     }
     catch (error) {
