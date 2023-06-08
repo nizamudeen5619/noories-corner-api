@@ -9,7 +9,7 @@ import { pageGenerator } from './page-generator.js';
 const router = new Router()
 
 //add product to amazon collection
-router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
+router.post('/amazon/admin', rootAuth, auth, async (req, res, next) => {
     try {
         const product = new Amazon(req.body)
         await product.validate(); // This will throw an error if the input is invalid
@@ -18,17 +18,21 @@ router.post('/amazon/admin', rootAuth, auth, async (req, res) => {
     } catch (e) {
         switch (e.code) {
             case 11000:
-                return res.status(409).send({ error: 'Product already exists' });
-            case 12000 || 12500:
-                return res.status(409).send({ error: `Validation Error: ${e.message}` });
-            default:
-                return res.status(500).send({ error: 'Internal server error' });
+                e.status = 409;
+                e.message = 'Product already exists'
+                break;
+            case 12000:
+            case 12500:
+                e.status = 409;
+                e.message = `Validation Error: ${e.message}`
+                break;
         }
+        next(e)
     }
 })
 
 //get products from amazon collection
-router.get('/amazon', rootAuth, async (req, res) => {
+router.get('/amazon', rootAuth, async (req, res, next) => {
     try {
         const { color, design, page } = req.query;
         const colorArray = color ? JSON.parse(color) : [];
@@ -60,31 +64,32 @@ router.get('/amazon', rootAuth, async (req, res) => {
             products,
             pages: pageGenerator(query, products.length, count),
         });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send();
+    } catch (e) {
+        next(e)
     }
 });
 
 //get product with id from amazon collection
-router.get('/amazon/:id', rootAuth, async (req, res) => {
+router.get('/amazon/:id', rootAuth, async (req, res, next) => {
     try {
         const id = req.params.id;
         // Validate the input
         if (!isValidId(id)) {
-            return res.status(400).send({ error: 'Invalid ID' });
+            throw new Error('400')
         }
         // Fetch the product or throw an error if not found
         const product = await Amazon.findOneOrFail({ _id: id });
         res.status(200).send(product);
     } catch (e) {
-        // Handle errors and send a meaningful error response
         if (e.name === 'EntityNotFoundError') {
-            return res.status(404).send({ error: 'Product not found' });
-        } else {
-            console.error(e);
-            return res.status(500).send({ error: 'Internal server error' });
+            e.status = 404;
+            e.message = 'Product no found'
         }
+        else if (e.message === '400') {
+            e.status = 400;
+            e.message = "Invalid ID";
+        }
+        next(e)
     }
 });
 
@@ -93,7 +98,7 @@ function isValidId(id) {
 }
 
 //update product in amazon collection
-router.put('/amazon/admin', rootAuth, auth, async (req, res) => {
+router.put('/amazon/admin', rootAuth, auth, async (req, res, next) => {
     try {
         const {
             ProductId,
@@ -134,39 +139,52 @@ router.put('/amazon/admin', rootAuth, auth, async (req, res) => {
             { new: true }
         );
         if (!product) {
-            return res.status(404).send();
+            throw new Error('400')
         }
         return res.status(200).send(product);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send();
+    } catch (e) {
+        if (e.name === 'EntityNotFoundError') {
+            e.status = 404;
+            e.message = 'Product no found'
+        }
+        else if (e.message === '400') {
+            e.status = 400;
+            e.message = "Invalid ID";
+        }
+        next(e)
     }
 });
 
 //delete product in amazon collection
-router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res) => {
+router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res, next) => {
     try {
         const { id } = req.params;
         const product = await Amazon.findOneAndDelete({ _id: id });
         if (!product) {
-            return res.status(404).send();
+            throw new Error('400')
         }
         return res.status(200).send(product);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send();
+    } catch (e) {
+        if (e.name === 'EntityNotFoundError') {
+            e.status = 404;
+            e.message = 'Product no found'
+        }
+        else if (e.message === '400') {
+            e.status = 400;
+            e.message = "Invalid ID";
+        }
+        next(e)
     }
 });
 
-router.get('/amazontop', rootAuth, async (req, res) => {
+router.get('/amazontop', rootAuth, async (req, res, next) => {
     try {
         const topSelling = await Amazon.find({ topSelling: true }, 'ProductName Image1')
         const topRated = await Amazon.find({ topRated: true }, 'ProductName Image1')
         return res.status(200).send({ topSelling, topRated });
     }
-    catch (error) {
-        console.error(error);
-        return res.status(500).send();
+    catch (e) {
+        next(e)
     }
 })
 

@@ -1,21 +1,21 @@
 import { verify } from 'jsonwebtoken'
 
-const rootAuth = async (req, res, next) => {
+const rootAuth = (req, res, next) => {
     try {
-        const token$ = req.header('apipass').trim()
-        const decoded = verify(token$, process.env.JWT_SECRET)
-        if (!token$ || !decoded) {
-            throw new Error('Unauthorised')
+        const token = req.header('apipass')?.trim();
+        if (!token) {
+            throw new Error('Unauthorized: Missing token');
         }
-        else if (decoded.apipass === process.env.API_PASSWORD) {
-            next()
+
+        const decoded = verify(token, process.env.JWT_SECRET);
+        if (!decoded || decoded.apipass !== process.env.API_PASSWORD) {
+            throw new Error('Unauthorized: Invalid token');
         }
-        else {
-            throw new Error('Unauthorised')
-        }
+
+        next();
     } catch (e) {
-        res.status(401).send({ error: 'Unauthorised' })
+        next(e); // Pass the error to the next middleware (error-handling middleware)
     }
-}
+};
 
 export default rootAuth

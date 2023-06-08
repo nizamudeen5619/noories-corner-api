@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import e, { Router } from 'express';
 import multer from 'multer';
 import sharp from 'sharp';
 import nodemailer from 'nodemailer';
@@ -13,103 +13,155 @@ let transporter = nodemailer.createTransport({
         user: process.env.EMAILID,
         pass: process.env.PASSWORD
     }
-})
+});
 
 //register
-router.post('/users/register', rootAuth, async (req, res) => {
-    const user = new User(req.body)
-
+router.post('/users/register', rootAuth, async (req, res, next) => {
     try {
-        let mailOptions = {
-            from: process.env.EMAILID,
-            to: user.email,
-            subject: 'Test',
-            text: `hi ${user.name}`
-        }
-        await transporter.sendMail(mailOptions)
-        await user.save()
-        const token = await user.generateAuthToken()
-        const username = user.name
-        res.status(201).send({ username, token })
+        const user = new User(req.body);
+
+        // Send email
+        await sendEmail(user.email, 'Test', `Hi ${user.name}`);
+
+        await user.save();
+        const token = await user.generateAuthToken();
+        const username = user.name;
+
+        res.status(201).send({ username, token });
     } catch (e) {
-        res.status(401).send('Email Already Exists')
+        if (e.code === 11000) {
+            e.message = 'Email already exists';
+        }
+        else if (e.message === '') {
+            e.message = 'An error occurred';
+        }
+        next(e);
     }
-})
+});
+
+async function sendEmail(to, subject, text) {
+    try {
+        const mailOptions = {
+            from: process.env.EMAILID,
+            to,
+            subject,
+            text,
+        };
+
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        throw new Error('Failed to send email');
+    }
+}
+
 
 //login
-router.post('/users/login', rootAuth, async (req, res) => {
+router.post('/users/login', rootAuth, async (req, res, next) => {
     try {
-        const user = await User.findByCredentials(req.body.email, req.body.password)
-        const token = await user.generateAuthToken()
-        const username = user.name
-        res.status(200).send({ username, token })
+        const user = await User.findByCredentials(req.body.email, req.body.password);
+        const token = await user.generateAuthToken();
+        const username = user.name;
+        res.status(200).send({ username, token });
     } catch (e) {
-        res.status(401).send()
+        if (e.status === 401) {
+            e.message = 'Invalid credentials'
+        }
+        next(e);
     }
-})
+});
 
 //logout
-router.post('/users/logout', rootAuth, auth, async (req, res) => {
+router.post('/users/logout', rootAuth, auth, async (req, res, next) => {
     try {
-        req.user.tokens = req.user.tokens.filter((token) => {
-            return token.token !== req.token
-        })
-        await req.user.save()
-        res.status(200).send()
-    } catch (e) {
-        res.status(500).send()
+        const user = req.user;
+
+        user.tokens = user.tokens.filter((token) => token.token !== req.token);
+        await user.save();
+
+        res.status(200).send();
+    } catch (error) {
+        e.message = 'Logout failed'
+        next(e);
     }
-})
+});
 
 //logoutall
 router.post('/users/logoutAll', rootAuth, auth, async (req, res) => {
     try {
-        req.user.tokens = []
-        await req.user.save()
-        res.status(200).send()
-    } catch (e) {
-        res.status(500).send()
+        const user = req.user;
+
+        user.tokens = [];
+        await user.save();
+
+        res.status(200).send();
+    } catch (error) {
+        e.message = 'Logout All failed'
+        next(e);
     }
-})
+});
 
 //user profile
-router.get('/users/me', rootAuth, auth, async (req, res) => {
-    res.send(req.user)
-})
+router.get('/users/me', rootAuth, auth, async (req, res, next) => {
+    try {
+        const user = req.user;
+
+        if (!user) {
+            throw new Error('404');
+        }
+
+        res.send(user);
+    } catch (error) {
+        if (e.message === '404') {
+            e.status = 404;
+            e.message = "User not found";
+        } else {
+            e.message = 'Failed to fetch user'
+        }
+        next(e);
+    }
+});
 
 //update user
-router.patch('/users/me', rootAuth, auth, async (req, res) => {
-    const updates = Object.keys(req.body)
-    const allowedUpdates = ['name', 'email', 'password', 'age']
-    const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+router.patch('/users/me', rootAuth, auth, async (req, res, next) => {
+    const updates = Object.keys(req.body);
+    const allowedUpdates = ['name', 'email', 'password', 'age'];
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
+
     if (!isValidOperation) {
-        return res.status(400).send({ error: 'Invalid updates!' })
+        throw new Error('400');
     }
+
     try {
-        updates.forEach((update) => req.user[update] = req.body[update])
-        await req.user.save()
-        res.status(200).send(req.user.name)
-    } catch (e) {
-        res.status(400).send(e)
+        updates.forEach((update) => req.user[update] = req.body[update]);
+        await req.user.save();
+
+        response.status(200).send(req.user.name);
+    } catch (error) {
+        if (e.message === '400') {
+            e.status = 400;
+            e.message = "Invalid updates";
+        } else {
+            e.message = 'Failed to update user'
+        }
+        next(e)
     }
-})
+});
 
 //delete user account
 router.delete('/users/me', rootAuth, auth, async (req, res) => {
     try {
-        let mailOptions = {
-            from: process.env.EMAILID,
-            to: req.user.email,
-            subject: 'Test',
-            text: `hi ${req.user.name}`
-        }
-        await transporter.sendMail(mailOptions)
-        await req.user.remove()
-        res.status(200).send()
-    } catch (e) {
-        res.status(500).send()
+        const user = req.user;
+
+        await sendEmail(user.email, 'Test', `Hi ${user.name}`);
+
+        await user.remove();
+
+        res.status(200).send();
+    } catch (error) {
+        console.error('Error during /users/me:', error);
+        res.status(500).send({ error: 'Failed to delete user' });
     }
-})
+});
 
 const storage = multer.memoryStorage()
 const upload = multer({
@@ -126,82 +178,112 @@ const upload = multer({
 })
 
 //upload profile photo
-router.post('/users/me/avatar', rootAuth, auth, upload.single('avatar'), async (req, res) => {
-    console.log(req.file);
-    const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
-    req.user.avatar = buffer
-    await req.user.save()
-    res.send()
-}, (error, req, res, next) => {
-    res.status(400).send({ error: error.message })
-})
-
-//delete profile photo
-router.delete('/users/me/avatar', rootAuth, auth, async (req, res) => {
-    req.user.avatar = undefined
-    await req.user.save()
-    res.status(200).send()
-}, (error, req, res, next) => {
-    res.status(400).send({ error: error.message })
-})
-
-//view profile photo
-router.get('/users/me/avatar', rootAuth, auth, async (req, res) => {
+router.post('/users/me/avatar', rootAuth, auth, upload.single('avatar'), async (req, res, next) => {
     try {
-        res.set('Content-Type', 'image/png')
-        res.status(200).send(req.user.avatar)
+        console.log(req.file);
+
+        const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
+
+        req.user.avatar = buffer;
+        await req.user.save();
+
+        res.send();
     } catch (e) {
-        res.status(404).send()
+        e.message = "Failed to upload avatar";
+        next(e)
     }
-})
+});
 
-//view favourites
-router.get('/users/favourites', rootAuth, auth, async (req, res) => {
-    res.send(req.user.favourites)
-}, (error, req, res, next) => {
-    res.status(400).send({ error: error.message })
-})
-
-//check favourites
-router.get('/users/favourites/:id', rootAuth, auth, async (req, res) => {
-    const id = req.params.id
-    let checkFavourite = false
-    for (let favourite of req.user.favourites) {
-        if (favourite.productID === id) {
-            checkFavourite = true
-            break;
+// Delete profile photo
+router.delete('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
+    try {
+        req.user.avatar = undefined;
+        await req.user.save();
+        res.status(200).send();
+    } catch (e) {
+        if (e.status === 500) {
+            e.message = "Failed to delete profile photo"
         }
+        next(e);
     }
-    res.status(200).send({ checkFavourite })
-}, (error, req, res, next) => {
-    res.status(400).send({ error: error.message })
-})
+});
+
+// View profile photo
+router.get('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
+    try {
+        if (!request.user.avatar) {
+            throw new Error('Profile photo not found');
+        }
+
+        res.set('Content-Type', 'image/png');
+        res.status(200).send(req.user.avatar);
+    } catch (e) {
+        if (e.status === 404) {
+            e.message = "Profile photo not found";
+        }
+        next(e);
+    }
+});
+
+// View favorites
+router.get('/users/favourites', rootAuth, auth, async (req, res, next) => {
+    try {
+        res.send(req.user.favourites);
+    } catch (e) {
+        if (e.status === 500) {
+            e.message = 'Failed to retrieve favorites'
+        }
+        next(e);
+    }
+});
+
+// Check favorites
+router.get('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
+    try {
+        const id = req.params.id;
+
+        const checkFavourite = req.user.favourites.some(favourite => favourite.productID === id);
+
+        res.status(200).send({ checkFavourite });
+    } catch (e) {
+        if (e.status === 500) {
+            e.message = 'Failed to check favorites';
+        }
+        next(e);
+    }
+});
 
 
-//add to favourites
+// Add to favorites
 router.post('/users/favourites/:id', rootAuth, auth, async (req, res) => {
     try {
-        const id = req.params.id
-        req.user.favourites = req.user.favourites.filter(product => product.productID !== id)
-        req.user.favourites.push({ productID: id })
-        await req.user.save()
-        res.status(200).send({ addedToFavourites: true })
-    } catch (e) {
-        res.status(400).send(e)
+        const id = req.params.id;
+        req.user.favourites = req.user.favourites.filter(product => product.productID !== id);
+        req.user.favourites.push({ productID: id });
+        await req.user.save();
+        res.status(200).send({ addedToFavourites: true });
+    } catch (error) {
+        if (e.status === 500) {
+            e.message = 'Failed to add to favorites';
+        }
+        next(e);
     }
-})
+});
 
-//remove from favourites
+// Remove from favorites
 router.delete('/users/favourites/:id', rootAuth, auth, async (req, res) => {
     try {
-        const favouriteID = req.params.id
-        req.user.favourites = req.user.favourites.filter(product => product.productID !== favouriteID)
-        await req.user.save()
-        res.status(200).send({ removedFromFavourites: true })
+        const favouriteID = req.params.id;
+        req.user.favourites = req.user.favourites.filter(product => product.productID !== favouriteID);
+        await req.user.save();
+        res.status(200).send({ removedFromFavourites: true });
     } catch (error) {
-        res.status(400).send(e)
+        if (e.status === 500) {
+            e.message = 'Failed to remove from favorites';
+        }
+        next(e);
     }
-})
+});
 
 
 export default router
