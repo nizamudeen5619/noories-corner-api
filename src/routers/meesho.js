@@ -177,7 +177,7 @@ router.delete('/meesho/admin/:id', rootAuth, auth, async (req, res, next) => {
     }
 });
 
-router.get('/amazontop', rootAuth, async (req, res, next) => {
+router.get('/meeshotop', rootAuth, async (req, res, next) => {
     try {
         const topSelling = await Meesho.find({ topSelling: true }, 'ProductName Image1')
         const topRated = await Meesho.find({ topRated: true }, 'ProductName Image1')

@@ -57,7 +57,7 @@ app.use(`/api/${apiVersion}`, meeshoRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.log(err);
+    console.log(err);//remove while deploying
     logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
     const statusCode = err.status || 500;
     res.status(statusCode).json({

@@ -63,8 +63,9 @@ router.post('/users/login', rootAuth, async (req, res, next) => {
         const username = user.name;
         res.status(200).send({ username, token });
     } catch (e) {
-        if (e.status === 401) {
-            e.message = 'Invalid credentials'
+        if (e.message === '401') {
+            e.status=401;
+            e.message = 'Invalid credentials! Please check your email and password.'
         }
         next(e);
     }
@@ -180,8 +181,6 @@ const upload = multer({
 //upload profile photo
 router.post('/users/me/avatar', rootAuth, auth, upload.single('avatar'), async (req, res, next) => {
     try {
-        console.log(req.file);
-
         const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
 
         req.user.avatar = buffer;
@@ -211,14 +210,15 @@ router.delete('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
 // View profile photo
 router.get('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
     try {
-        if (!request.user.avatar) {
-            throw new Error('Profile photo not found');
+        if (!req.user.avatar) {
+            throw new Error('404');
         }
 
         res.set('Content-Type', 'image/png');
         res.status(200).send(req.user.avatar);
     } catch (e) {
-        if (e.status === 404) {
+        if (e.message === '404') {
+            e.status=404;
             e.message = "Profile photo not found";
         }
         next(e);
