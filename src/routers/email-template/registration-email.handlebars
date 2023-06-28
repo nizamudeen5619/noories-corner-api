@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Welcome to {{nooriescornerApp.name}} - {{nooriescornerApp.slogan}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 20px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            max-width: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="{{nooriescornerApp.logo}}" alt="Logo">
+        </div>
+
+        <p>Dear {{username}},</p>
+
+        <p>Congratulations and a warm welcome to {{nooriescornerApp.name}}! We are excited to inform you that your
+            account registration is now successfully completed. You are officially a valued member of our blouse-loving
+            community.</p>
+
+        <p>Now that you have joined us, get ready to explore an array of stylish blouses and discover the perfect ones
+            that reflect your unique taste. Here's a quick overview of what you can do with your new account:</p>
+
+        <ol>
+            <li>Browse and Shop: Dive into our captivating collection of blouses, featuring the latest trends, stunning
+                designs, and an assortment of colors and sizes. Enjoy the convenience of shopping from the comfort of
+                your own home.</li>
+            <li>Create Your Wishlist: Found a blouse you love but want to save it for later? Simply add it to your
+                wishlist, and you can easily access and revisit your favorite items whenever you like.</li>
+            <li>Personalize Your Profile: Make your account truly yours by personalizing your profile. Upload a profile
+                picture, update your preferences, and share your fashion inspirations with our community.</li>
+            <li>Exclusive Offers and Updates: As a valued member, you'll be among the first to hear about our exciting
+                promotions, limited-time offers, and new blouse arrivals. Be sure to keep an eye on your inbox for our
+                newsletters and updates.</li>
+        </ol>
+
+        <p>Should you need any assistance during your shopping journey, our dedicated customer support team is here to
+            help. Feel free to reach out to us at
+            <a href="mailto:{{nooriescornerApp.email}}">{{nooriescornerApp.email}}</a>, and we'll be more than happy to
+            assist you.
+        </p>
+
+        <p>Once again, congratulations on becoming a member of {{nooriescornerApp.name}}. We can't wait to see you rock
+            the latest blouse trends and showcase your unique style. Happy shopping!</p>
+
+        <p>Best regards,<br>{{nooriescornerApp.name}} Team</p>
+    </div>
+</body>
+
+</html>
