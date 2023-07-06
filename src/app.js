@@ -29,7 +29,7 @@ const accessLogStream = fs.createWriteStream(ACCESS_LOG_PATH, { flags: 'a' });
 
 // Create a Winston logger instance
 const logger = winston.createLogger({
-    level: 'info',
+    level: 'silly',
     format: winston.format.json(),
     defaultMeta: { service: 'noories-corner-api' },
     transports: [
@@ -69,7 +69,7 @@ app.use((err, req, res, next) => {
 // Logging middleware
 app.use((req, res, next) => {
     // Add a timestamp to the Winston logs
-    logger.log('info', `${req.method} ${req.url}`, { timestamp: Date.now() });
+    logger.log('info', `${req.method} ${req.url}`);
     next();
 });
 
