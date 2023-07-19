@@ -74,6 +74,7 @@ router.post('/users/register', rootAuth, async (req, res, next) => {
         res.status(201).send({ username, token });
     } catch (e) {
         if (e.code === 11000) {
+            e.status = 501;
             e.message = 'Email already exists';
         }
         else if (e.message === '') {
@@ -110,7 +111,7 @@ router.post('/users/forgot-password', async (req, res, next) => {
 
 
         if (!user) {
-            throw new Error('User not found.');
+            throw new Error('401');
         }
 
         const username = user.name;
@@ -127,7 +128,6 @@ router.post('/users/forgot-password', async (req, res, next) => {
         const resetToken = await user.generatePasswordResetToken();
         // Generate password reset link
         const passResetLink = "http://localhost:4200/user/reset-password/" + String(resetToken);
-
         // Provide the data to the template
         const compiledTemplate = template({
             username,
@@ -138,8 +138,12 @@ router.post('/users/forgot-password', async (req, res, next) => {
         // Send email
         await sendEmail(user.email, `Noorie's Corner - Account Password Reset`, compiledTemplate);
 
-        res.status(200).send();
+        res.status(200).send({ status: 'success' });
     } catch (e) {
+        if (e.message === '401') {
+            e.status = 401;
+            e.message = 'Email not found'
+        }
         next(e);
     }
 });
@@ -156,7 +160,7 @@ router.post('/users/reset-password', async (req, res, next) => {
         });
 
         if (!user) {
-            throw new Error('Invalid or expired token.');
+            throw new Error('401');
         }
 
         // Set the new password and clear the reset token fields
@@ -170,8 +174,12 @@ router.post('/users/reset-password', async (req, res, next) => {
         // Save the updated user document
         await user.save();
 
-        res.status(200).send();
+        res.status(200).send({ status: 'success' });
     } catch (e) {
+        if (e.message === '401') {
+            e.status = 401;
+            e.message = 'Token Expired'
+        }
         next(e);
     }
 });

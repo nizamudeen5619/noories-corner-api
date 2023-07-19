@@ -61,7 +61,6 @@ app.use((err, req, res, next) => {
     logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
     const statusCode = err.status || 500;
     res.status(statusCode).json({
-        status: statusCode,
         message: err.message || 'Internal Server Error'
     });
 });
