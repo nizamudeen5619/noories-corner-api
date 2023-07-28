@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import sharp from 'sharp';
+import bcrypt from 'bcryptjs'
 import nodemailer from 'nodemailer';
 import User from '../models/user.js';
 import auth from '../middleware/auth.js';
@@ -168,9 +169,6 @@ router.post('/users/reset-password', async (req, res, next) => {
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
 
-        // Hash the new password
-        user.password = await bcrypt.hash(user.password, 8);
-
         // Save the updated user document
         await user.save();
 
@@ -194,7 +192,7 @@ router.post('/users/logout', rootAuth, auth, async (req, res, next) => {
         await user.save();
 
         res.status(200).send();
-    } catch (error) {
+    } catch (e) {
         e.message = 'Logout failed'
         next(e);
     }
@@ -345,9 +343,10 @@ router.get('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
         if (!req.user.avatar) {
             throw new Error('404');
         }
-
-        res.set('Content-Type', 'image/png');
-        res.status(200).send(req.user.avatar);
+        else{
+            res.set('Content-Type', 'image/png');
+            res.status(200).send(req.user.avatar);    
+        }
     } catch (e) {
         if (e.message === '404') {
             e.status = 404;
