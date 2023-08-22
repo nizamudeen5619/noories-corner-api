@@ -1,4 +1,6 @@
-import { verify } from 'jsonwebtoken'
+import jsonwebtoken from 'jsonwebtoken'
+
+const { verify } = jsonwebtoken;
 
 const rootAuth = (req, res, next) => {
     try {
