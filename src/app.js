@@ -42,7 +42,10 @@ const logger = winston.createLogger({
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = ['http://localhost:4200']; // Add your frontend's domain
+app.use(cors({
+  origin: allowedOrigins,
+}));
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
