@@ -228,7 +228,7 @@ router.get('/users/me', rootAuth, auth, async (req, res, next) => {
             e.status = 404;
             e.message = "User not found";
         } else {
-            e.message = 'Failed to fetch user'
+            e.message = 'Failed to fetch user';
         }
         next(e);
     }
@@ -237,7 +237,7 @@ router.get('/users/me', rootAuth, auth, async (req, res, next) => {
 //update user
 router.patch('/users/me', rootAuth, auth, async (req, res, next) => {
     const updates = Object.keys(req.body);
-    const allowedUpdates = ['name', 'email', 'password', 'age'];
+    const allowedUpdates = ['name', 'email', 'age'];
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
     if (!isValidOperation) {
@@ -249,14 +249,14 @@ router.patch('/users/me', rootAuth, auth, async (req, res, next) => {
         await req.user.save();
 
         res.status(200).send(req.user.name);
-    } catch (error) {
+    } catch (e) {
         if (e.message === '400') {
             e.status = 400;
             e.message = "Invalid updates";
         } else {
-            e.message = 'Failed to update user'
+            e.message = 'Failed to update user';
         }
-        next(e)
+        next(e);
     }
 });
 
@@ -264,32 +264,39 @@ router.patch('/users/me', rootAuth, auth, async (req, res, next) => {
 router.delete('/users/me', rootAuth, auth, async (req, res) => {
     try {
         const user = req.user;
+        const enteredPassword = req.body.password;
 
-        const username = user.name;
+        // Compare the entered password with the user's hashed password
+        const passwordMatch = await bcrypt.compare(enteredPassword, user.password);
+        if (!passwordMatch) {
+            throw new Error('401')
+        }
+        else {
+            const username = user.name;
+            // Read the HTML template file
+            const __dirname = path.dirname(fileURLToPath(import.meta.url));
+            const templatePath = path.join(__dirname, 'email-template', 'account-deletion-email.handlebars');
+            const htmlTemplate = readFileSync(templatePath, 'utf8');
+            // Compile the Handlebars template
+            const template = handlebars.compile(htmlTemplate);
+            // Provide the data to the template
+            const compiledTemplate = template({
+                username,
+                nooriescornerApp,
+            });
 
-        // Read the HTML template file
-        const __dirname = path.dirname(fileURLToPath(import.meta.url));
-        const templatePath = path.join(__dirname, 'email-template', 'account-deletion-email.handlebars');
-        const htmlTemplate = readFileSync(templatePath, 'utf8');
+            await sendEmail(user.email, `Account Deletion - ${nooriescornerApp.name}`, compiledTemplate);
 
-        // Compile the Handlebars template
-        const template = handlebars.compile(htmlTemplate);
+            await user.remove();
 
-        // Provide the data to the template
-        const compiledTemplate = template({
-            username,
-            nooriescornerApp,
-        });
-
-
-        await sendEmail(user.email, `Account Deletion - ${nooriescornerApp.name}`, compiledTemplate);
-
-        await user.remove();
-
-        res.status(200).send();
-    } catch (error) {
-        console.error('Error during /users/me:', error);
-        res.status(500).send({ error: 'Failed to delete user' });
+            res.status(200).send();
+        }
+    } catch (e) {
+        if (e.message === '401') {
+            e.status = 401;
+            e.message = "Incorrect Password";
+        }
+        next(e);
     }
 });
 
@@ -312,13 +319,11 @@ const upload = multer({
 router.post('/users/me/avatar', rootAuth, auth, upload.single('avatar'), async (req, res, next) => {
     try {
         const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
-
         req.user.avatar = buffer;
         await req.user.save();
 
         res.send();
     } catch (e) {
-        e.message = "Failed to upload avatar";
         next(e)
     }
 });
@@ -330,9 +335,6 @@ router.delete('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
         await req.user.save();
         res.status(200).send();
     } catch (e) {
-        if (e.status === 500) {
-            e.message = "Failed to delete profile photo"
-        }
         next(e);
     }
 });
@@ -343,9 +345,9 @@ router.get('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
         if (!req.user.avatar) {
             throw new Error('404');
         }
-        else{
+        else {
             res.set('Content-Type', 'image/png');
-            res.status(200).send(req.user.avatar);    
+            res.status(200).send(req.user.avatar);
         }
     } catch (e) {
         if (e.message === '404') {
