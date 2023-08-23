@@ -50,6 +50,12 @@ const app = express();
 // };
 
 // app.use(cors(corsOptions)); // Use cors middleware with the defined options
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:4200'); // Add other allowed origins here
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+  });
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
