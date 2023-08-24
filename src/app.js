@@ -42,20 +42,15 @@ const logger = winston.createLogger({
 const app = express();
 
 // Middleware
-// const allowedOrigins = ['http://localhost:4200', 'https://yourdomain.com']; // Add your frontend's domains
-// const corsOptions = {
-//   origin: allowedOrigins,
-//   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-//   credentials: true, // This allows cookies and other credentials to be included in requests
-// };
+const allowedOrigins = ['http://localhost:4200']; // Add your frontend's domains
+const corsOptions = {
+    origin: allowedOrigins,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // This allows cookies and other credentials to be included in requests
+};
 
-// app.use(cors(corsOptions)); // Use cors middleware with the defined options
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:4200'); // Add other allowed origins here
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-  });
+app.use(cors(corsOptions)); // Use cors middleware with the defined options
+
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
