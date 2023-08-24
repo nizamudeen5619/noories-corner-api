@@ -54,7 +54,7 @@ router.get('/amazon', rootAuth, async (req, res, next) => {
                 return {};
             });
         const products = await Amazon.find(
-            { $or: query },
+            query.length > 0 ? { $or: query } : {},
             'ProductName Price Rating Image1'
         )
             .limit(12)

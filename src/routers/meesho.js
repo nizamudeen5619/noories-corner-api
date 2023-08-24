@@ -54,7 +54,7 @@ router.get('/meesho', rootAuth, async (req, res, next) => {
                 return {};
             });
         const products = await Meesho.find(
-            { $or: query },
+            query.length > 0 ? { $or: query } : {},
             'ProductName Price Rating Image1'
         )
             .limit(12)
