@@ -1,4 +1,4 @@
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 12;
 
 const pageGenerator = function (query, currentCount, count) {
     const totalCount = (query.length === 0) ? count : currentCount;
