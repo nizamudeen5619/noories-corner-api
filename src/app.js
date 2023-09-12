@@ -68,8 +68,20 @@ app.use((err, req, res, next) => {
     console.log(err);//remove while deploying
     logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
     const statusCode = err.status || 500;
+    let errorMessage = '';
+    if (err.name === 'ValidationError') {
+        statusCode = 400; // Bad Request
+        // Handle Mongoose validation error
+        errorMessage = 'Validation error. Please check your input.';
+    } else if (err.name === 'MongoError') {
+        statusCode = 409; // Conflict 
+        // Handle MongoDB error (e.g., duplicate key)
+        errorMessage = 'Database error. Please try again later.';
+    } else {
+        errorMessage = err.message;
+    }
     res.status(statusCode).json({
-        message: err.message || 'Internal Server Error'
+        message: errorMessage || 'Internal Server Error'
     });
 });
 

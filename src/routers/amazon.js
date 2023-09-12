@@ -179,12 +179,12 @@ router.delete('/amazon/admin/:id', rootAuth, auth, async (req, res, next) => {
 
 router.get('/amazontop', rootAuth, async (req, res, next) => {
     try {
-        const topSelling = await Amazon.find({ topSelling: true }, 'ProductName Image1').lean();
+        const topSelling = await Amazon.find({ topSelling: true }, 'Image1').lean();
         topSelling.forEach(product => {
             product.Platform = 'amazon';
         });
 
-        const topRated = await Amazon.find({ topRated: true }, 'ProductName Image1').lean();
+        const topRated = await Amazon.find({ topRated: true }, 'Image1').lean();
         topRated.forEach(product => {
             product.Platform = 'amazon';
         });

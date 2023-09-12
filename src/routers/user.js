@@ -10,6 +10,10 @@ import handlebars from 'handlebars';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { Types } from 'mongoose';
+import Meesho from '../models/meesho.js';
+import Amazon from '../models/amazon.js';
+
 
 const nooriescornerApp = {
     name: "Noorie's Corner",
@@ -248,7 +252,7 @@ router.patch('/users/me', rootAuth, auth, async (req, res, next) => {
         updates.forEach((update) => req.user[update] = req.body[update]);
         await req.user.save();
 
-        res.status(200).send(req.user.name);
+        res.status(200).send({ userName: req.user.name });
     } catch (e) {
         if (e.message === '400') {
             e.status = 400;
@@ -361,12 +365,25 @@ router.get('/users/me/avatar', rootAuth, auth, async (req, res, next) => {
 // View favorites
 router.get('/users/favourites', rootAuth, auth, async (req, res, next) => {
     try {
-        res.send(req.user.favourites);
-    } catch (e) {
-        if (e.status !== 500) {
-            e.message = 'Failed to retrieve favorites'
+        const favouriteProductIds = req.user.favourites;
+
+        let favouriteProducts;
+
+        if(!favouriteProductIds.length){
+            favouriteProducts=[];
         }
-        next(e);
+        else{
+        const [meeshoProducts, amazonProducts] = await Promise.all([
+            Meesho.find({ _id: { $in: favouriteProductIds } }).select('ProductName Price Rating Image1'),
+            Amazon.find({ _id: { $in: favouriteProductIds } }).select('ProductName Price Rating Image1'),
+        ]);
+        
+        favouriteProducts = [...meeshoProducts, ...amazonProducts];
+        }
+
+        res.status(200).send({ favouriteProducts });
+    } catch (e) {
+        next(e)
     }
 });
 
@@ -374,14 +391,24 @@ router.get('/users/favourites', rootAuth, auth, async (req, res, next) => {
 router.get('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
     try {
         const id = req.params.id;
-
-        const checkFavourite = req.user.favourites.some(favourite => favourite.productID === id);
-
+        const productId = Types.ObjectId(id);
+        let checkFavourite;
+        if (!req.user.favourites.length) {
+            checkFavourite = false;
+        }
+        else {
+            checkFavourite = req.user.favourites.includes(productId);
+        }
         res.status(200).send({ checkFavourite });
     } catch (e) {
         if (e.status !== 500) {
             e.message = 'Failed to check favorites';
         }
+        else if (e.message === '400') {
+            e.status = 400;
+            e.message = 'Invalid product ID';
+        }
+
         next(e);
     }
 });
@@ -390,14 +417,38 @@ router.get('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
 // Add to favorites
 router.post('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
     try {
-        const id = req.params.id;
-        req.user.favourites = req.user.favourites.filter(product => product.productID !== id);
-        req.user.favourites.push({ productID: id });
+        const productId = req.params.id;
+
+        if (!Types.ObjectId.isValid(productId)) {
+            throw new Error('400');
+        }
+        const [meeshoProduct, amazonProduct] = await Promise.all([
+            Meesho.findById(productId),
+            Amazon.findById(productId)
+        ]);
+
+        if (!meeshoProduct && !amazonProduct) {
+            throw new Error('404');
+        }
+        // Update the user's favorites in memory
+        if (!req.user.favourites.includes(productId)) {
+            req.user.favourites.push(productId);
+        }
+
         await req.user.save();
+
         res.status(200).send({ addedToFavourites: true });
-    } catch (error) {
+    } catch (e) {
         if (e.status !== 500) {
             e.message = 'Failed to add to favorites';
+        }
+        else if (e.message === '400') {
+            e.status = 400;
+            e.message = 'Invalid product ID';
+        }
+        else if (e.message === '404') {
+            e.status = 404;
+            e.message = 'Product not found';
         }
         next(e);
     }
@@ -406,13 +457,28 @@ router.post('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
 // Remove from favorites
 router.delete('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
     try {
-        const favouriteID = req.params.id;
-        req.user.favourites = req.user.favourites.filter(product => product.productID !== favouriteID);
+        const productId = req.params.id;
+        // Validate that 'id' is a valid ObjectId
+        if (!Types.ObjectId.isValid(productId)) {
+            throw new Error('400');
+        }
+        if (!req.user.favorites.includes(productId)) {
+            throw new Error('404');
+        }
+        req.user.favourites = req.user.favourites.filter(product => product.productID !== productId);
         await req.user.save();
         res.status(200).send({ removedFromFavourites: true });
-    } catch (error) {
+    } catch (e) {
         if (e.status !== 500) {
             e.message = 'Failed to remove from favorites';
+        }
+        else if (e.message === '400') {
+            e.status = 400;
+            e.message = 'Invalid product ID';
+        }
+        else if (e.message === '404') {
+            e.status = 404;
+            e.message = 'Product not found in favourites';
         }
         next(e);
     }

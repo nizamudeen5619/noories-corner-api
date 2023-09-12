@@ -3,6 +3,8 @@ import validator from 'validator'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto';
+import Amazon from './amazon.js';
+import Meesho from './meesho.js';
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -47,12 +49,16 @@ const userSchema = new mongoose.Schema({
             type: String
         }
     }],
-    favourites: [{
-        productID: {
-            type: String
+    favourites: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'meesho' // Reference to the Meesho schema
+        },
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'amazon' // Reference to the Amazon schema
         }
-    }],
-    avatar: {
+    ], avatar: {
         type: Buffer
     },
     passwordResetToken: {
@@ -96,7 +102,7 @@ userSchema.methods.generatePasswordResetToken = async function () {
 
     // Set the token and its expiration time in the user document
     user.passwordResetToken = token;
-    user.passwordResetExpires = Date.now() + 3600000; // Token expires in 1 hour
+    user.passwordResetExpires = Date.now() + 10800000; // Token expires in 3 hour
 
     // Save the user document
     await user.save();
