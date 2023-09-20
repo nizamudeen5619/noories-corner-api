@@ -211,7 +211,7 @@ router.post('/users/logoutAll', rootAuth, auth, async (req, res) => {
         await user.save();
 
         res.status(200).send();
-    } catch (error) {
+    } catch (e) {
         e.message = 'Logout All failed'
         next(e);
     }

@@ -65,7 +65,7 @@ app.use(`/api/${apiVersion}`, meeshoRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.log(err);//remove while deploying
+    console.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);//remove while deploying
     logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
     const statusCode = err.status || 500;
     let errorMessage = '';
@@ -88,6 +88,7 @@ app.use((err, req, res, next) => {
 // Logging middleware
 app.use((req, res, next) => {
     // Add a timestamp to the Winston logs
+    console.log(`${req.method} ${req.url}`)
     logger.log('info', `${req.method} ${req.url}`);
     next();
 });
