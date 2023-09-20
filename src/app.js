@@ -16,9 +16,7 @@ const logger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.printf(({ timestamp, level, message }) => {
-            return `${timestamp} [${level}]: ${message}`;
-        })
+        winston.format.format.json()
     ),
     defaultMeta: { service: 'noories-corner-api' },
     transports: [
@@ -50,6 +48,17 @@ app.use(`/api/${apiVersion}`, userRouter);
 app.use(`/api/${apiVersion}`, amazonRouter);
 app.use(`/api/${apiVersion}`, meeshoRouter);
 
+process.on('uncaughtException', (error) => {
+    // Log the uncaught exception and exit the process if needed
+    logger.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    // Log unhandled promise rejections
+    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
@@ -73,10 +82,31 @@ app.use((err, req, res, next) => {
 
 // Logging middleware
 app.use((req, res, next) => {
-    // Add a timestamp to the Winston logs
-    console.log('info');
-    logger.info(`${req.method} ${req.url}`);
+    const startTime = new Date();
+
+    // Log request details
+    logger.info(`${req.method} ${req.url} ${req.ip}`);
+
+    // Log request headers
+    logger.info('Request Headers:', req.headers);
+
+    // Log query parameters (if applicable)
+    if (Object.keys(req.query).length > 0) {
+        logger.info('Query Parameters:', req.query);
+    }
+
+    // Continue with the request
     next();
+
+    // Log response status code and response time after the response is sent
+    res.on('finish', () => {
+        const endTime = new Date();
+        const responseTime = endTime - startTime;
+
+        logger.info(`Response Status Code: ${res.statusCode}`);
+        logger.info(`Response Time: ${responseTime}ms`);
+
+    });
 });
 
 export default app;
