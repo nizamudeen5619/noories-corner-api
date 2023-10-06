@@ -97,16 +97,6 @@ app.use((req, res, next) => {
 
     // Continue with the request
     next();
-
-    // Log response status code and response time after the response is sent
-    res.on('finish', () => {
-        const endTime = new Date();
-        const responseTime = endTime - startTime;
-
-        logger.info(`Response Status Code: ${res.statusCode}`);
-        logger.info(`Response Time: ${responseTime}ms`);
-
-    });
 });
 
 export default app;

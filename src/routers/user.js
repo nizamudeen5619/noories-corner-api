@@ -399,6 +399,7 @@ router.get('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
         else {
             checkFavourite = req.user.favourites.includes(productId);
         }
+        console.log(checkFavourite);
         res.status(200).send({ checkFavourite });
     } catch (e) {
         if (e.status !== 500) {
@@ -462,7 +463,7 @@ router.delete('/users/favourites/:id', rootAuth, auth, async (req, res, next) =>
         if (!Types.ObjectId.isValid(productId)) {
             throw new Error('400');
         }
-        if (!req.user.favorites.includes(productId)) {
+        if (!req.user.favorites.includes(productId) || !req.user.favorites.length) {
             throw new Error('404');
         }
         req.user.favourites = req.user.favourites.filter(product => product.productID !== productId);
