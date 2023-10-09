@@ -82,10 +82,9 @@ app.use((err, req, res, next) => {
 
 // Logging middleware
 app.use((req, res, next) => {
-    const startTime = new Date();
 
     // Log request details
-    logger.info(`${req.method} ${req.url} ${req.ip}`);
+    logger.info(`${req}`);
 
     // Log request headers
     logger.info('Request Headers:', req.headers);
