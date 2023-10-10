@@ -84,7 +84,7 @@ app.use((err, req, res, next) => {
 app.use((req, res, next) => {
 
     // Log request details
-    logger.info(`${req.toString()}`);
+    logger.info(`path:${req.path}`);
 
     // Log request headers
     logger.info('Request Headers:', req.headers);
