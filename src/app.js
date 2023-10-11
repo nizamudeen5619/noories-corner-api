@@ -29,7 +29,7 @@ const logger = winston.createLogger({
 const app = express();
 
 // Middleware
-const allowedOrigins = ['http://localhost:4200']; // Add your frontend's domains
+const allowedOrigins = ['http://localhost:4200','https://noories-corner-app-dev.vercel.app/']; // Add your frontend's domains
 const corsOptions = {
     origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
