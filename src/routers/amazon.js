@@ -55,7 +55,7 @@ router.get('/amazon', rootAuth, async (req, res, next) => {
             });
         const products = await Amazon.find(
             query.length > 0 ? { $or: query } : {},
-            'ProductName Price Rating Image1'
+            'ProductName Price Rating Image1 Platform'
         )
             .limit(12)
             .skip(skip);

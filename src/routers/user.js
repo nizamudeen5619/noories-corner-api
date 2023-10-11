@@ -369,16 +369,28 @@ router.get('/users/favourites', rootAuth, auth, async (req, res, next) => {
 
         let favouriteProducts;
 
-        if(!favouriteProductIds.length){
-            favouriteProducts=[];
+        if (!favouriteProductIds.length) {
+            favouriteProducts = [];
         }
-        else{
-        const [meeshoProducts, amazonProducts] = await Promise.all([
-            Meesho.find({ _id: { $in: favouriteProductIds } }).select('ProductName Price Rating Image1'),
-            Amazon.find({ _id: { $in: favouriteProductIds } }).select('ProductName Price Rating Image1'),
-        ]);
-        
-        favouriteProducts = [...meeshoProducts, ...amazonProducts];
+        else {
+            const [meeshoProducts, amazonProducts] = await Promise.all([
+                Meesho.find({ _id: { $in: favouriteProductIds } }).select('ProductName Price Rating Image1'),
+                Amazon.find({ _id: { $in: favouriteProductIds } }).select('ProductName Price Rating Image1'),
+            ]);
+
+            // Add a virtual field "Platform" to Meesho products
+            const meeshoProductsWithPlatform = meeshoProducts.map(product => ({
+                ...product.toObject(), // Convert Mongoose document to plain object
+                Platform: 'meesho',
+            }));
+
+            // Add a virtual field "Platform" to Amazon products
+            const amazonProductsWithPlatform = amazonProducts.map(product => ({
+                ...product.toObject(), // Convert Mongoose document to plain object
+                Platform: 'amazon',
+            }));
+
+            favouriteProducts = [...meeshoProductsWithPlatform, ...amazonProductsWithPlatform];
         }
 
         res.status(200).send({ favouriteProducts });
@@ -399,7 +411,6 @@ router.get('/users/favourites/:id', rootAuth, auth, async (req, res, next) => {
         else {
             checkFavourite = req.user.favourites.includes(productId);
         }
-        console.log(checkFavourite);
         res.status(200).send({ checkFavourite });
     } catch (e) {
         if (e.status !== 500) {
